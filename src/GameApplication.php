@@ -2,17 +2,19 @@
 
 namespace App;
 
-use App\ArmorType\IceBlockType;
-use App\ArmorType\LeatherArmorType;
-use App\ArmorType\ShieldType;
-use App\AttackType\BowType;
-use App\AttackType\FireBoltType;
-use App\AttackType\MultiAttackType;
-use App\AttackType\TwoHandedSwordType;
+
+use App\Builder\CharacterBuilder;
+use App\Builder\CharacterBuildFactory;
 use App\Character\Character;
+use App\Enum\ArmorTypeEnum;
+use App\Enum\AttackTypeEnum;
 
 class GameApplication
 {
+    public function __construct(private CharacterBuildFactory $characterBuildFactory)
+    {
+    }
+
     public function play(Character $player, Character $ai): FightResult
     {
         $player->rest();
@@ -45,10 +47,34 @@ class GameApplication
     public function createCharacter(string $character): Character
     {
         return match (strtolower($character)) {
-            'fighter' => new Character(90, 12, new TwoHandedSwordType(), new ShieldType()),
-            'archer' => new Character(80, 10, new BowType(), new LeatherArmorType()),
-            'mage' => new Character(70, 8, new FireBoltType(), new IceBlockType()),
-            'mage_archer' => new Character(75, 9, new MultiAttackType([new BowType(), new FireBoltType()]), new ShieldType()),
+            'fighter' => $this->createCharacterBuilder()
+                ->setMaxHeath(90)
+                ->setBaseDamage(15)
+                ->setAttackType(AttackTypeEnum::SWORD)
+                ->setArmorType(ArmorTypeEnum::SHIELD)
+                ->buildCharacter()
+            ,
+            'archer' => $this->createCharacterBuilder()
+                ->setMaxHeath(80)
+                ->setBaseDamage(10)
+                ->setAttackType(AttackTypeEnum::BOW)
+                ->setArmorType(ArmorTypeEnum::LEATHER_ARMOR)
+                ->buildCharacter()
+            ,
+            'mage' => $this->createCharacterBuilder()
+                ->setMaxHeath(70)
+                ->setBaseDamage(8)
+                ->setAttackType(AttackTypeEnum::FIREBOLT)
+                ->setArmorType(ArmorTypeEnum::ICE_BLOCK)
+                ->buildCharacter()
+            ,
+            'mage_archer' => $this->createCharacterBuilder()
+                ->setMaxHeath(75)
+                ->setBaseDamage(9)
+                ->setAttackType(AttackTypeEnum::BOW, AttackTypeEnum::FIREBOLT) //TODO
+                ->setArmorType(ArmorTypeEnum::SHIELD)
+                ->buildCharacter()
+            ,
             default => throw new \RuntimeException('Undefined Character'),
         };
     }
@@ -74,5 +100,10 @@ class GameApplication
     private function didPlayerDie(Character $player): bool
     {
         return $player->getCurrentHealth() <= 0;
+    }
+
+    private function createCharacterBuilder(): CharacterBuilder
+    {
+        return $this->characterBuildFactory->createBuilder();
     }
 }

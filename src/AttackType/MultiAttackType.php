@@ -8,7 +8,7 @@ class MultiAttackType implements AttackType
     /**
      * @param AttackType[] $attackTypes
      */
-    public function __construct(private array $attackTypes)
+    public function __construct(private readonly array $attackTypes)
     {
     }
 
