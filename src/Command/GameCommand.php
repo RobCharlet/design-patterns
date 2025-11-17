@@ -25,12 +25,6 @@ class GameCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // Initialize the XP observer
-        $xpObserver = new XpEarnedObserver(
-            new XpCalculator()
-        );
-        $this->game->subscribe($xpObserver);
-
         $io = new SymfonyStyle($input, $output);
 
         $io->text('Welcome to the game where warriors fight against each other for honor and glory... and 🍕!');
