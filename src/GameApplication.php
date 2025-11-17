@@ -8,9 +8,13 @@ use App\Builder\CharacterBuildFactory;
 use App\Character\Character;
 use App\Enum\ArmorTypeEnum;
 use App\Enum\AttackTypeEnum;
+use App\Observer\GameObserverInterface;
 
 class GameApplication
 {
+    /** @var GameObserverInterface[] */
+    private array $observers = [];
+
     public function __construct(private CharacterBuildFactory $characterBuildFactory)
     {
     }
@@ -89,10 +93,27 @@ class GameApplication
         ];
     }
 
+    public function subscribe(GameObserverInterface $gameObserver): void
+    {
+        if (!in_array($gameObserver, $this->observers)) {
+            $this->observers[] = $gameObserver;
+        }
+    }
+
+    public function unSubscribe(GameObserverInterface $gameObserver): void
+    {
+        $key = array_search($gameObserver, $this->observers, true);
+        if ($key !== false) {
+            unset($this->observers[$key]);
+        }
+    }
+
     private function finishFightResult(FightResult $fightResult, Character $winner, Character $loser): FightResult
     {
         $fightResult->setWinner($winner);
         $fightResult->setLoser($loser);
+
+        $this->notify($fightResult);
 
         return $fightResult;
     }
@@ -105,5 +126,12 @@ class GameApplication
     private function createCharacterBuilder(): CharacterBuilder
     {
         return $this->characterBuildFactory->createBuilder();
+    }
+
+    private function notify(FightResult $fightResult): void
+    {
+        foreach ($this->observers as $observer) {
+            $observer->onFightFinished($fightResult);
+        }
     }
 }
