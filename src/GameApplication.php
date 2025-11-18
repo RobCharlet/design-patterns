@@ -8,19 +8,29 @@ use App\Builder\CharacterBuildFactory;
 use App\Character\Character;
 use App\Enum\ArmorTypeEnum;
 use App\Enum\AttackTypeEnum;
+use App\Event\FightStartingEvent;
 use App\Observer\GameObserverInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class GameApplication
 {
     /** @var GameObserverInterface[] */
     private array $observers = [];
 
-    public function __construct(private CharacterBuildFactory $characterBuildFactory)
+    public function __construct(
+        private CharacterBuildFactory $characterBuildFactory,
+        private EventDispatcherInterface $eventDispatcher,
+    )
     {
     }
 
     public function play(Character $player, Character $ai): FightResult
     {
+        $this->eventDispatcher->dispatch(new FightStartingEvent(
+            $player,
+            $ai
+        ));
+
         $player->rest();
 
         $fightResult = new FightResult();
